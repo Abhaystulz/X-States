@@ -118,9 +118,10 @@ export default function CitySelector() {
         ))}
       </select>
 
-      {selectedCity && (
+      {/* Corrected Selected Location Display */}
+      {selectedCity && selectedState && selectedCountry && (
         <p data-testid="selected-location">
-          Selected Location: {selectedCountry}, {selectedState}, {selectedCity}
+          You selected {selectedCity}, {selectedState}, {selectedCountry}
         </p>
       )}
 
@@ -128,6 +129,3 @@ export default function CitySelector() {
     </div>
   );
 }
-
-
-
