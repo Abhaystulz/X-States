@@ -80,7 +80,7 @@ export default function CitySelector() {
     <div style={{ textAlign: "center" }}>
       <h3>City Selector</h3>
 
-      {/* Country */}
+      {/* Country Dropdown */}
       <select
         data-testid="country-dropdown"
         value={selectedCountry}
@@ -92,7 +92,7 @@ export default function CitySelector() {
         ))}
       </select>
 
-      {/* State */}
+      {/* State Dropdown */}
       <select
         data-testid="state-dropdown"
         disabled={!selectedCountry}
@@ -105,7 +105,7 @@ export default function CitySelector() {
         ))}
       </select>
 
-      {/* City */}
+      {/* City Dropdown */}
       <select
         data-testid="city-dropdown"
         disabled={!selectedState}
@@ -118,13 +118,14 @@ export default function CitySelector() {
         ))}
       </select>
 
-      {/* Corrected Selected Location Display */}
+      {/* Selected Location Display */}
       {selectedCity && selectedState && selectedCountry && (
         <p data-testid="selected-location">
           You selected {selectedCity}, {selectedState}, {selectedCountry}
         </p>
       )}
 
+      {/* Error Display */}
       {error && <p data-testid="error-message">{error}</p>}
     </div>
   );
