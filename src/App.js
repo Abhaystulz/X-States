@@ -1,6 +1,5 @@
-import logo from "./logo.svg";
 import "./App.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 function App() {
   const [countries, setCountries] = useState([]);
@@ -13,55 +12,60 @@ function App() {
     city: "",
   });
 
-  useEffect(() => {
-    fetchCountries();
-  }, []);
-
-  useEffect(() => {
-    if (!!formData.country) fetchStates();
-    setCities([]);
-  }, [formData.country]);
-
-  useEffect(() => {
-    if (!!formData.state) fetchCities();
-    setFormData((data) => ({ ...data, city: "" }));
-  }, [formData.state]);
-
-  const fetchCountries = async () => {
+  const fetchCountries = useCallback(async () => {
     try {
-      const country = await fetch(
+      const response = await fetch(
         `https://crio-location-selector.onrender.com/countries`
       );
-      const respCountry = await country.json();
-      setCountries(respCountry);
+      const data = await response.json();
+      setCountries(data);
     } catch (err) {
       console.log(err.message);
     }
-  };
+  }, []);
 
-  const fetchStates = async () => {
+  const fetchStates = useCallback(async () => {
     try {
-      const state = await fetch(
+      const response = await fetch(
         `https://crio-location-selector.onrender.com/country=${formData.country}/states`
       );
-      const respState = await state.json();
-      setStates(respState);
+      const data = await response.json();
+      setStates(data);
     } catch (err) {
       console.log(err.message);
     }
-  };
+  }, [formData.country]);
 
-  const fetchCities = async () => {
+  const fetchCities = useCallback(async () => {
     try {
-      const city = await fetch(
+      const response = await fetch(
         `https://crio-location-selector.onrender.com/country=${formData.country}/state=${formData.state}/cities`
       );
-      const respCity = await city.json();
-      setCities(respCity);
+      const data = await response.json();
+      setCities(data);
     } catch (err) {
       console.log(err.message);
     }
-  };
+  }, [formData.country, formData.state]);
+
+  useEffect(() => {
+    fetchCountries();
+  }, [fetchCountries]);
+
+  useEffect(() => {
+    if (formData.country) {
+      fetchStates();
+      setCities([]);
+      setFormData((data) => ({ ...data, state: "", city: "" }));
+    }
+  }, [formData.country, fetchStates]);
+
+  useEffect(() => {
+    if (formData.state) {
+      fetchCities();
+      setFormData((data) => ({ ...data, city: "" }));
+    }
+  }, [formData.state, fetchCities]);
 
   return (
     <div className="App">
@@ -69,9 +73,9 @@ function App() {
       <div className="App-data">
         <select
           value={formData.country}
-          onChange={(e) => {
-            setFormData((data) => ({ ...data, country: e.target.value }));
-          }}
+          onChange={(e) =>
+            setFormData((data) => ({ ...data, country: e.target.value }))
+          }
         >
           <option value="" disabled>
             Select Country
@@ -82,6 +86,7 @@ function App() {
             </option>
           ))}
         </select>
+
         <select
           value={formData.state}
           onChange={(e) =>
@@ -97,6 +102,7 @@ function App() {
             </option>
           ))}
         </select>
+
         <select
           value={formData.city}
           onChange={(e) =>
@@ -113,7 +119,8 @@ function App() {
           ))}
         </select>
       </div>
-      {!!formData.city && (
+
+      {formData.city && (
         <p>
           You selected {formData.city}, {formData.state}, {formData.country}
         </p>
@@ -123,3 +130,4 @@ function App() {
 }
 
 export default App;
+
