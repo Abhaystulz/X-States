@@ -1,140 +1,133 @@
-import "./App.css";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-const BASE_URL = "https://location-selector.labs.crio.do";
-
-function App() {
+export default function CitySelector() {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedState, setSelectedState] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+
   const [error, setError] = useState("");
 
-  const [formData, setFormData] = useState({
-    country: "",
-    state: "",
-    city: "",
-  });
-
+  // Fetch Countries
   useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        setError("");
+        const res = await fetch("https://location-selector.labs.crio.do/countries");
+        if (!res.ok) throw new Error("Failed Country API");
+        const data = await res.json();
+        setCountries(data);
+      } catch (err) {
+        setError("Unable to load countries");
+        setCountries([]);
+      }
+    };
     fetchCountries();
   }, []);
 
-  useEffect(() => {
-    if (formData.country) {
-      fetchStates();
-      setFormData((data) => ({ ...data, state: "", city: "" }));
-      setCities([]);
-    }
-  }, [formData.country]);
+  // Fetch States when country changes
+  const handleCountryChange = async (e) => {
+    const country = e.target.value;
+    setSelectedCountry(country);
+    setSelectedState("");
+    setSelectedCity("");
+    setStates([]);
+    setCities([]);
 
-  useEffect(() => {
-    if (formData.state) {
-      fetchCities();
-      setFormData((data) => ({ ...data, city: "" }));
-    }
-  }, [formData.state]);
+    if (!country) return;
 
-  const fetchCountries = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/countries`);
-      const data = await res.json();
-      setCountries(data);
       setError("");
-    } catch {
-      setError("Failed to load countries");
-    }
-  };
-
-  const fetchStates = async () => {
-    try {
       const res = await fetch(
-        `${BASE_URL}/country=${formData.country}/states`
+        `https://location-selector.labs.crio.do/country=${country}/states`
       );
+      if (!res.ok) throw new Error("Failed State API");
       const data = await res.json();
       setStates(data);
-      setError("");
-    } catch {
-      setError("Failed to load states");
+    } catch (err) {
+      setError("Unable to load states");
+      setStates([]);
     }
   };
 
-  const fetchCities = async () => {
+  // Fetch Cities when state changes
+  const handleStateChange = async (e) => {
+    const state = e.target.value;
+    setSelectedState(state);
+    setSelectedCity("");
+    setCities([]);
+
+    if (!state) return;
+
     try {
+      setError("");
       const res = await fetch(
-        `${BASE_URL}/country=${formData.country}/state=${formData.state}/cities`
+        `https://location-selector.labs.crio.do/country=${selectedCountry}/state=${state}/cities`
       );
+      if (!res.ok) throw new Error("Failed City API");
       const data = await res.json();
       setCities(data);
-      setError("");
-    } catch {
-      setError("Failed to load cities");
+    } catch (err) {
+      setError("Unable to load cities");
+      setCities([]);
     }
   };
 
   return (
-    <div className="App">
-      <h1>Select Location</h1>
+    <div style={{ textAlign: "center" }}>
+      <h3>City Selector</h3>
 
-      {error && <p className="error">{error}</p>}
+      {/* Country */}
+      <select
+        data-testid="country-dropdown"
+        value={selectedCountry}
+        onChange={handleCountryChange}
+      >
+        <option value="">Select Country</option>
+        {countries.map((c) => (
+          <option key={c} value={c}>{c}</option>
+        ))}
+      </select>
 
-      <div className="App-data">
-        <select
-          data-testid="country-select"
-          value={formData.country}
-          onChange={(e) =>
-            setFormData((data) => ({ ...data, country: e.target.value }))
-          }
-        >
-          <option value="">Select Country</option>
-          {countries.map((country) => (
-            <option key={country} value={country}>
-              {country}
-            </option>
-          ))}
-        </select>
+      {/* State */}
+      <select
+        data-testid="state-dropdown"
+        disabled={!selectedCountry}
+        value={selectedState}
+        onChange={handleStateChange}
+      >
+        <option value="">Select State</option>
+        {states.map((s) => (
+          <option key={s} value={s}>{s}</option>
+        ))}
+      </select>
 
-        <select
-          data-testid="state-select"
-          disabled={!formData.country}
-          value={formData.state}
-          onChange={(e) =>
-            setFormData((data) => ({ ...data, state: e.target.value }))
-          }
-        >
-          <option value="">Select State</option>
-          {states.map((state) => (
-            <option key={state} value={state}>
-              {state}
-            </option>
-          ))}
-        </select>
+      {/* City */}
+      <select
+        data-testid="city-dropdown"
+        disabled={!selectedState}
+        value={selectedCity}
+        onChange={(e) => setSelectedCity(e.target.value)}
+      >
+        <option value="">Select City</option>
+        {cities.map((c) => (
+          <option key={c} value={c}>{c}</option>
+        ))}
+      </select>
 
-        <select
-          data-testid="city-select"
-          disabled={!formData.state}
-          value={formData.city}
-          onChange={(e) =>
-            setFormData((data) => ({ ...data, city: e.target.value }))
-          }
-        >
-          <option value="">Select City</option>
-          {cities.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {formData.city && (
+      {selectedCity && (
         <p data-testid="selected-location">
-          You selected {formData.city}, {formData.state}, {formData.country}
+          Selected Location: {selectedCountry}, {selectedState}, {selectedCity}
         </p>
       )}
+
+      {error && <p data-testid="error-message">{error}</p>}
     </div>
   );
 }
 
-export default App;
 
 
